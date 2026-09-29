@@ -61,6 +61,39 @@ QFrame#checkRow[done="true"] {
     background: rgba(9, 24, 22, 190);
     border-color: rgba(58, 205, 176, 150);
 }
+QFrame#checkRow[kind="check"] {
+    background: rgba(23, 107, 135, 82);
+    border-color: rgba(42, 151, 184, 155);
+}
+QFrame#checkRow[kind="test"] {
+    background: rgba(165, 90, 18, 82);
+    border-color: rgba(211, 125, 40, 165);
+}
+QFrame#checkRow[kind="set"] {
+    background: rgba(113, 76, 162, 82);
+    border-color: rgba(153, 111, 207, 165);
+}
+QFrame#checkRow[kind="action"] {
+    background: rgba(166, 61, 61, 82);
+    border-color: rgba(218, 83, 83, 165);
+}
+QFrame#checkRow[kind="comm"] {
+    background: rgba(36, 117, 79, 82);
+    border-color: rgba(58, 166, 112, 165);
+}
+QFrame#legendPanel {
+    background: rgba(8, 14, 15, 150);
+    border: 1px solid rgba(77, 105, 104, 96);
+    border-radius: 7px;
+}
+QLabel#legendTitle {
+    font-size: 17px;
+    font-weight: 900;
+}
+QLabel#legendText {
+    color: #aebbbb;
+    font-size: 13px;
+}
 QLabel#rowTitle {
     color: #ffffff;
     font-weight: 800;
@@ -74,6 +107,26 @@ QLabel#criticalBadge {
     font-size: 12px;
     font-weight: 900;
 }
+QLabel#optionalBadge {
+    color: #d8e2e2;
+    background: #354142;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 12px;
+    font-weight: 900;
+}
+QLabel#categoryBadge {
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 12px;
+    font-weight: 900;
+}
+QLabel#categoryBadge[kind="check"] { background: #176b87; }
+QLabel#categoryBadge[kind="test"] { background: #a55a12; }
+QLabel#categoryBadge[kind="set"] { background: #714ca2; }
+QLabel#categoryBadge[kind="action"] { background: #a63d3d; }
+QLabel#categoryBadge[kind="comm"] { background: #24754f; }
 QPushButton {
     color: #f2f2ef;
     background: rgba(10, 14, 15, 205);
@@ -124,7 +177,8 @@ QPushButton[role="enforce"]:checked {
 }
 QPushButton[role="nav"] {
     text-align: left;
-    padding: 10px 12px;
+    padding: 6px 12px;
+    min-height: 28px;
 }
 QPushButton[role="nav"]:checked {
     color: #061010;
@@ -247,6 +301,39 @@ QFrame#checkRow[done="true"] {
     background: rgba(220, 248, 242, 240);
     border-color: rgba(0, 143, 118, 170);
 }
+QFrame#checkRow[kind="check"] {
+    background: rgba(18, 103, 131, 42);
+    border-color: rgba(18, 103, 131, 135);
+}
+QFrame#checkRow[kind="test"] {
+    background: rgba(153, 80, 13, 42);
+    border-color: rgba(153, 80, 13, 140);
+}
+QFrame#checkRow[kind="set"] {
+    background: rgba(104, 68, 150, 42);
+    border-color: rgba(104, 68, 150, 140);
+}
+QFrame#checkRow[kind="action"] {
+    background: rgba(153, 53, 53, 42);
+    border-color: rgba(153, 53, 53, 140);
+}
+QFrame#checkRow[kind="comm"] {
+    background: rgba(28, 112, 73, 42);
+    border-color: rgba(28, 112, 73, 140);
+}
+QFrame#legendPanel {
+    background: rgba(247, 251, 251, 220);
+    border: 1px solid rgba(126, 151, 153, 126);
+    border-radius: 7px;
+}
+QLabel#legendTitle {
+    font-size: 17px;
+    font-weight: 900;
+}
+QLabel#legendText {
+    color: #526468;
+    font-size: 13px;
+}
 QLabel#rowTitle {
     color: #10191b;
     font-weight: 800;
@@ -260,6 +347,26 @@ QLabel#criticalBadge {
     font-size: 12px;
     font-weight: 900;
 }
+QLabel#optionalBadge {
+    color: #ffffff;
+    background: #647679;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 12px;
+    font-weight: 900;
+}
+QLabel#categoryBadge {
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 12px;
+    font-weight: 900;
+}
+QLabel#categoryBadge[kind="check"] { background: #126783; }
+QLabel#categoryBadge[kind="test"] { background: #99500d; }
+QLabel#categoryBadge[kind="set"] { background: #684496; }
+QLabel#categoryBadge[kind="action"] { background: #993535; }
+QLabel#categoryBadge[kind="comm"] { background: #1c7049; }
 QPushButton {
     color: #172123;
     background: rgba(255, 255, 255, 232);
@@ -310,7 +417,8 @@ QPushButton[role="enforce"]:checked {
 }
 QPushButton[role="nav"] {
     text-align: left;
-    padding: 10px 12px;
+    padding: 6px 12px;
+    min-height: 28px;
 }
 QPushButton[role="nav"]:checked {
     color: #ffffff;

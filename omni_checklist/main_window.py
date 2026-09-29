@@ -24,16 +24,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.select_screen.theme_toggled.connect(self._toggle_theme)
         self.stack.addWidget(self.select_screen)
         self.current_checklist = None
+        self.checklist_sessions = {}
         self._apply_theme()
 
     def _open_aircraft(self, key: str) -> None:
-        if self.current_checklist:
-            self.stack.removeWidget(self.current_checklist)
-            self.current_checklist.deleteLater()
-        self.current_checklist = ChecklistScreen(AIRCRAFT[key], self.theme)
-        self.current_checklist.back_requested.connect(self._show_select)
-        self.current_checklist.theme_toggled.connect(self._toggle_theme)
-        self.stack.addWidget(self.current_checklist)
+        self.current_checklist = self.checklist_sessions.get(key)
+        if self.current_checklist is None:
+            self.current_checklist = ChecklistScreen(AIRCRAFT[key], self.theme)
+            self.current_checklist.back_requested.connect(self._show_select)
+            self.current_checklist.theme_toggled.connect(self._toggle_theme)
+            self.checklist_sessions[key] = self.current_checklist
+            self.stack.addWidget(self.current_checklist)
+        else:
+            self.current_checklist.set_theme(self.theme)
         self.stack.setCurrentWidget(self.current_checklist)
 
     def _show_select(self) -> None:
@@ -49,5 +52,5 @@ class MainWindow(QtWidgets.QMainWindow):
             app.setStyleSheet(style_for(self.theme))
         self.surface.set_theme(self.theme)
         self.select_screen.set_theme(self.theme)
-        if self.current_checklist:
-            self.current_checklist.set_theme(self.theme)
+        for checklist in self.checklist_sessions.values():
+            checklist.set_theme(self.theme)

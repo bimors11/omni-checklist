@@ -3,6 +3,55 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from omni_checklist.checklist_data import Aircraft, ChecklistItem
 
 
+INSTRUCTION_KINDS = ("check", "test", "set", "action", "comm")
+
+
+def instruction_kind(item: ChecklistItem) -> str:
+    text = item.text
+    if text.startswith("TOWER:") or "CALL 'CLEAR PROP'" in text:
+        return "comm"
+    if text.startswith((
+        "AHRS:",
+        "AIRSPEED:",
+        "CONTROL SURFACES:",
+        "CONTROL AUTHORITY:",
+        "FLIGHT MODES:",
+        "FULL THROTTLE",
+        "THROTTLE RESPONSE:",
+        "BRAKE 1 HOLD:",
+        "BRAKE 2 HOLD:",
+        "RANGEFINDER:",
+        "TAXI / STEERING:",
+    )):
+        return "test"
+    if text.startswith((
+        "AIRCRAFT POWER:",
+        "AIRCRAFT: ARMED",
+        "AIRCRAFT: DISARMED",
+        "BRAKE: POSITION",
+        "ENGINE: START",
+        "ENGINE: IDLE / SHUT DOWN",
+        "FLIGHT MODE:",
+        "GCS: ON",
+        "MOTOR: START",
+        "MOTOR: IDLE / SHUT DOWN",
+        "THROTTLE: IDLE",
+        "THROTTLE: INCREASE",
+    )):
+        return "set"
+    if text.startswith((
+        "EXTERNAL PILOT:",
+        "LANDING: CONTINUE",
+        "RETURN DECISION:",
+        "RUNWAY: VACATE",
+        "TAKEOFF:",
+        "TELEMETRY: DISCONNECT",
+        "WARM-UP:",
+    )):
+        return "action"
+    return "check"
+
+
 class AircraftCard(QtWidgets.QFrame):
     selected = QtCore.pyqtSignal(str)
 
@@ -11,8 +60,8 @@ class AircraftCard(QtWidgets.QFrame):
         self.aircraft = aircraft
         self.setObjectName("aircraftCard")
         self.setCursor(QtCore.Qt.PointingHandCursor)
-        self.setMinimumHeight(440)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.setFixedHeight(480)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(18, 18, 18, 18)
@@ -24,7 +73,7 @@ class AircraftCard(QtWidgets.QFrame):
         pix = QtGui.QPixmap(aircraft.image)
         if not pix.isNull():
             image.setPixmap(pix.scaled(760, 360, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
-        image.setMinimumHeight(330)
+        image.setFixedHeight(280)
         layout.addWidget(image, 1)
 
         name = QtWidgets.QLabel(aircraft.name)
@@ -55,6 +104,7 @@ class ChecklistRow(QtWidgets.QFrame):
         self.item = item
         self.setObjectName("checkRow")
         self.setProperty("critical", "true" if item.critical else "false")
+        self.setProperty("kind", instruction_kind(item))
         self.setCursor(QtCore.Qt.PointingHandCursor)
 
         layout = QtWidgets.QHBoxLayout(self)
@@ -85,6 +135,11 @@ class ChecklistRow(QtWidgets.QFrame):
         if item.critical:
             badge = QtWidgets.QLabel("CRITICAL")
             badge.setObjectName("criticalBadge")
+            badge.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents)
+            layout.addWidget(badge, 0, QtCore.Qt.AlignTop)
+        elif item.optional:
+            badge = QtWidgets.QLabel("OPTIONAL")
+            badge.setObjectName("optionalBadge")
             badge.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents)
             layout.addWidget(badge, 0, QtCore.Qt.AlignTop)
 

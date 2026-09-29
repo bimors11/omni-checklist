@@ -112,10 +112,26 @@ class ChecklistScreen(QtWidgets.QWidget):
             section: [False] * len(items)
             for section, items in self.data.items()
         }
-        self.enforce_checklist = False
+        self.enforce_checklist = True
         self.current_section = SECTION_ORDER[0]
         self._build_ui()
+        self._build_shortcuts()
         self._load_section(self.current_section)
+
+    def _build_shortcuts(self) -> None:
+        self.enter_shortcuts = []
+        for key in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
+            shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(key), self)
+            shortcut.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+            shortcut.activated.connect(self._check_next_item)
+            self.enter_shortcuts.append(shortcut)
+
+    def _check_next_item(self) -> None:
+        for row in self.rows:
+            if not row.is_checked():
+                row.set_checked(True)
+                self.scroll.ensureWidgetVisible(row, 0, 24)
+                return
 
     def _build_ui(self):
         root = QtWidgets.QVBoxLayout(self)
@@ -204,6 +220,41 @@ class ChecklistScreen(QtWidgets.QWidget):
             button.clicked.connect(lambda checked, name=section: self._load_section(name))
             self.nav_buttons[section] = button
             left_layout.addWidget(button)
+
+        left_layout.addSpacing(12)
+        legend_panel = QtWidgets.QFrame()
+        legend_panel.setObjectName("legendPanel")
+        legend_panel.setMinimumHeight(190)
+        legend_panel.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        legend_layout = QtWidgets.QVBoxLayout(legend_panel)
+        legend_layout.setContentsMargins(12, 12, 12, 12)
+        legend_layout.setSpacing(8)
+        legend_title = QtWidgets.QLabel("Color Legend")
+        legend_title.setObjectName("legendTitle")
+        legend_layout.addWidget(legend_title)
+        legend_items = (
+            ("check", "Verify status or value"),
+            ("test", "Exercise equipment"),
+            ("set", "Change mode or control"),
+            ("action", "Perform an action"),
+            ("comm", "Communicate or call out"),
+        )
+        for kind, description in legend_items:
+            row = QtWidgets.QHBoxLayout()
+            row.setSpacing(8)
+            badge = QtWidgets.QLabel(kind.upper())
+            badge.setObjectName("categoryBadge")
+            badge.setProperty("kind", kind)
+            badge.setFixedWidth(70)
+            badge.setFixedHeight(24)
+            badge.setAlignment(QtCore.Qt.AlignCenter)
+            text = QtWidgets.QLabel(description)
+            text.setObjectName("legendText")
+            text.setWordWrap(True)
+            row.addWidget(badge)
+            row.addWidget(text, 1)
+            legend_layout.addLayout(row)
+        left_layout.addWidget(legend_panel)
 
         left_layout.addStretch(1)
         hint = QtWidgets.QLabel("Normal operations checklist.")
@@ -298,6 +349,7 @@ class ChecklistScreen(QtWidgets.QWidget):
             item = self.list_layout.takeAt(0)
             widget = item.widget()
             if widget:
+                widget.hide()
                 widget.deleteLater()
         self.rows = []
 
@@ -306,11 +358,12 @@ class ChecklistScreen(QtWidgets.QWidget):
 
         for index, checklist_item in enumerate(self.data[section]):
             row = ChecklistRow(checklist_item)
-            row.changed.connect(self._update_progress)
             row.set_checked(self.checked_state[section][index])
             self.rows.append(row)
             self.list_layout.addWidget(row)
+            row.changed.connect(self._update_progress)
         self.list_layout.addStretch(1)
+        self.scroll.verticalScrollBar().setValue(0)
         self._update_progress()
         self._sync_prev_next()
 
@@ -321,8 +374,9 @@ class ChecklistScreen(QtWidgets.QWidget):
 
     def _update_progress(self):
         self._save_current_state()
-        total = len(self.rows)
-        done = sum(row.is_checked() for row in self.rows)
+        required_rows = [row for row in self.rows if not row.item.optional]
+        total = len(required_rows)
+        done = sum(row.is_checked() for row in required_rows)
         percent = int((done / total) * 100) if total else 0
         self.progress.setValue(percent)
         self.progress.setFormat(f"{done}/{total} complete")
@@ -360,7 +414,12 @@ class ChecklistScreen(QtWidgets.QWidget):
 
     def _section_complete(self, section: str) -> bool:
         checked = self.checked_state.get(section, [])
-        return bool(checked) and all(checked)
+        required = [
+            is_checked
+            for item, is_checked in zip(self.data[section], checked)
+            if not item.optional
+        ]
+        return bool(required) and all(required)
 
     def _first_incomplete_section(self) -> str:
         for section in SECTION_ORDER:
@@ -388,7 +447,8 @@ class ChecklistScreen(QtWidgets.QWidget):
 
     def _complete_current_section(self):
         for row in self.rows:
-            row.set_checked(True)
+            if not row.item.optional:
+                row.set_checked(True)
         self._save_current_state()
         self._update_progress()
 
