@@ -164,7 +164,6 @@ CHECKLISTS: Dict[str, Dict[str, List[ChecklistItem]]] = {
             ChecklistItem("BAROMETER / IMU / COMPASS: NORMAL"),
             ChecklistItem("GPS: 3D FIX / POSITION / HEADING VERIFIED"),
             ChecklistItem("AIRSPEED: REASONABLE"),
-            ChecklistItem("RANGEFINDER: READING / RESPONSE CHECKED"),
             ChecklistItem("JOYSTICK: CONNECTED / CENTERED"),
             ChecklistItem("CONTROL SURFACES: FULL / FREE / CORRECT"),
             ChecklistItem("CONTROL AUTHORITY: CHECKED"),
