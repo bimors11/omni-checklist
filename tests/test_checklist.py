@@ -34,9 +34,10 @@ class ChecklistTests(unittest.TestCase):
         self.app.processEvents()
         self.assertEqual(screen.scroll.verticalScrollBar().value(), 0)
 
-    def test_demonstrator_has_no_rangefinder_or_brake_items(self):
+    def test_demonstrator_has_rangefinder_but_no_brake_items(self):
         items = [item.text for section in CHECKLISTS["demonstrator"].values() for item in section]
-        self.assertFalse(any("RANGEFINDER" in text or "BRAKE" in text for text in items))
+        self.assertTrue(any("RANGEFINDER" in text for text in items))
+        self.assertFalse(any("BRAKE" in text for text in items))
 
     def test_checked_section_survives_navigation(self):
         screen = ChecklistScreen(AIRCRAFT["demonstrator"])

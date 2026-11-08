@@ -3,7 +3,7 @@ from typing import Dict, List
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from omni_checklist.checklist_data import BETA_LOGO, AIRCRAFT, Aircraft, checklist_for
-from omni_checklist.emergency_data import EMERGENCY_CHECKLISTS
+from omni_checklist.emergency_data import EMERGENCY_BY_AIRCRAFT
 from omni_checklist.widgets import AircraftCard, ChecklistRow
 
 
@@ -86,7 +86,7 @@ class SelectScreen(QtWidgets.QWidget):
             cards.addWidget(card)
         layout.addLayout(cards, 1)
 
-        foot = QtWidgets.QLabel("OMNI-Trainer normal and emergency procedures; OMNI-Demonstrator normal checklist.")
+        foot = QtWidgets.QLabel("OMNI-Trainer and OMNI-Demonstrator normal and emergency checklists.")
         foot.setObjectName("hintText")
         foot.setWordWrap(True)
         layout.addWidget(foot)
@@ -107,7 +107,7 @@ class ChecklistScreen(QtWidgets.QWidget):
         self.aircraft = aircraft
         self.theme = theme
         self.normal_data = checklist_for(aircraft.key)
-        self.emergency_data = EMERGENCY_CHECKLISTS if aircraft.key == "trainer" else {}
+        self.emergency_data = EMERGENCY_BY_AIRCRAFT.get(aircraft.key, {})
         self.data = self.normal_data
         self.mode = "normal"
         self.section_order = list(self.data)
@@ -371,7 +371,9 @@ class ChecklistScreen(QtWidgets.QWidget):
 
     def _section_context(self, section: str) -> str:
         if self.mode == "emergency":
-            return "AFM Chapter 3 quick reference. Select the applicable procedure immediately."
+            if self.aircraft.key == "trainer":
+                return "AFM Chapter 3 quick reference. Select the applicable procedure immediately."
+            return "Demonstrator 6S quick reference. Verify limits against its approved manual."
         if section == "Preflight / GCS":
             return "Airframe, crew, GCS, mission, and UAV power checks."
         if section == "Before Start":

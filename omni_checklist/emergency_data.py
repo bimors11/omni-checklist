@@ -1,4 +1,4 @@
-"""OMNI-Trainer emergency quick reference, AFM Chapter 3, revision A."""
+"""Aircraft-specific emergency quick references."""
 
 from omni_checklist.checklist_data import ChecklistItem
 
@@ -89,4 +89,87 @@ EMERGENCY_CHECKLISTS = {
         ChecklistItem("LOCATION / DAMAGE / COMPONENTS: PHOTOGRAPH"),
         ChecklistItem("MISSION / TELEMETRY / VIDEO / TIME: SAVE"),
     ],
+}
+
+
+# Demonstrator values below are retained from its existing 6S checklist. The
+# supplied OMNI-Trainer AFM does not establish Demonstrator emergency limits.
+DEMONSTRATOR_EMERGENCY_CHECKLISTS = {
+    "Initial Response": [
+        ChecklistItem("FAILURE / ALTITUDE / POSITION: CALL OUT"),
+        ChecklistItem("UAV CONTROL: MAINTAIN; SELECT SAFE AREA", critical=True),
+        ChecklistItem("TOWER: REPORT EMERGENCY / INTENTION"),
+    ],
+    "Telemetry / Control Link Loss": [
+        ChecklistItem("COMMUNICATION LOST / FROZEN DATA: VERIFY"),
+        ChecklistItem("BACKUP CONTROL LINK: VERIFY STATUS"),
+        ChecklistItem("GCS ANTENNA / TRANSCEIVER / CABLE: CHECK"),
+        ChecklistItem("UAV RESPONSE / FAILSAFE MODE: OBSERVE"),
+        ChecklistItem("RTL: CONFIRM ONLY IF INDICATED", critical=True),
+        ChecklistItem("BACKUP LINK ACTIVE: TRANSFER CONTROL IF NEEDED"),
+    ],
+    "Low / Critical Battery (6S)": [
+        ChecklistItem("BELOW 22.0 V: PREPARE TO LAND"),
+        ChecklistItem("AT 21.0 V: LOW VOLTAGE; END MISSION", critical=True),
+        ChecklistItem("BATTERY VOLTAGE / TREND: MONITOR"),
+        ChecklistItem("GPS VALID: RETURN / VERIFY TRACK"),
+        ChecklistItem("AT 18.0 V: CRITICAL; LAND AT SAFE AREA", critical=True),
+        ChecklistItem("GPS INVALID: DO NOT RELY ON RTL"),
+    ],
+    "Motor Fails to Start (Ground)": [
+        ChecklistItem("START ATTEMPT / THROTTLE: STOP / IDLE"),
+        ChecklistItem("MOTOR / PROPELLER: STOPPED", critical=True),
+        ChecklistItem("DISARM BEFORE GROUND INSPECTION", critical=True),
+        ChecklistItem("POWER / 6S BATTERY / MOTOR STATUS: CHECK"),
+        ChecklistItem("RETRY ONLY AFTER FAULT AND AREA ARE CLEARED"),
+    ],
+    "Motor Power Loss (Flight)": [
+        ChecklistItem("MOTOR POWER LOSS: CALL OUT"),
+        ChecklistItem("MAINTAIN CONTROL / SAFE GLIDE", critical=True),
+        ChecklistItem("HOME / REACHABLE LANDING AREA: SELECT"),
+        ChecklistItem("6S BATTERY / MOTOR WARNING: CHECK"),
+        ChecklistItem("LANDING WORKLOAD: PRIORITIZE"),
+        ChecklistItem("TOWER / GROUND CREW: REPORT LANDING PLAN"),
+    ],
+    "GPS / Compass Fault": [
+        ChecklistItem("GROUND: HOLD START / DO NOT ARM", critical=True),
+        ChecklistItem("POSITION / HEADING: CROSS-CHECK VISUALLY"),
+        ChecklistItem("AIRBORNE GPS INVALID: STOP WAYPOINT NAVIGATION"),
+        ChecklistItem("GPS INVALID: DO NOT RELY ON RTL", critical=True),
+        ChecklistItem("VALIDATED MODE: CONTROL TO SAFE AREA"),
+    ],
+    "Airspeed / Altitude Unreliable": [
+        ChecklistItem("AIRSPEED: CROSS-CHECK GPS SPEED / WIND / RESPONSE"),
+        ChecklistItem("ALTITUDE: CROSS-CHECK GPS / BARO / VISUAL"),
+        ChecklistItem("UNRELIABLE DATA: END MISSION"),
+        ChecklistItem("AUTO LANDING UNSAFE: ABORT / GO AROUND", critical=True),
+        ChecklistItem("GPS VALID ONLY: SELECT GO-AROUND WAYPOINT"),
+        ChecklistItem("VISUAL LANDING: USE VALIDATED CONTROL MODE"),
+    ],
+    "Attitude / Path Deviation": [
+        ChecklistItem("UNSTABLE ATTITUDE: RECOVER CONTROL", critical=True),
+        ChecklistItem("POSITION / HEADING / WAYPOINT: VERIFY"),
+        ChecklistItem("SAFE LANDING AREA: SELECT"),
+        ChecklistItem("GPS VALID: STANDBY WAYPOINT OR RTL"),
+        ChecklistItem("GPS INVALID: VISUAL CONTROL TO SAFE AREA"),
+    ],
+    "Unsafe Landing Area / Approach": [
+        ChecklistItem("RUNWAY / WIND / OBSTRUCTIONS: CONFIRM"),
+        ChecklistItem("UNSAFE / GPS VALID: GO-AROUND WAYPOINT"),
+        ChecklistItem("GPS INVALID: SAFE VISUAL LANDING AREA"),
+        ChecklistItem("TOWER / EXTERNAL PILOT: REPORT / CONFIRM"),
+    ],
+    "Post-Incident": [
+        ChecklistItem("SITE / INJURIES / BATTERY HAZARDS: SECURE"),
+        ChecklistItem("MOTOR STOP / PROPELLER STOPPED: CONFIRM", critical=True),
+        ChecklistItem("DISARM / 6S BATTERY DISCONNECT WHEN SAFE"),
+        ChecklistItem("LOCATION / DAMAGE / COMPONENTS: RECORD"),
+        ChecklistItem("MISSION / TELEMETRY / VIDEO: SAVE"),
+    ],
+}
+
+
+EMERGENCY_BY_AIRCRAFT = {
+    "trainer": EMERGENCY_CHECKLISTS,
+    "demonstrator": DEMONSTRATOR_EMERGENCY_CHECKLISTS,
 }

@@ -3,7 +3,7 @@ import unittest
 from PyQt5 import QtWidgets
 
 from omni_checklist.checklist_data import AIRCRAFT, CHECKLISTS
-from omni_checklist.emergency_data import EMERGENCY_CHECKLISTS
+from omni_checklist.emergency_data import EMERGENCY_CHECKLISTS, DEMONSTRATOR_EMERGENCY_CHECKLISTS
 from omni_checklist.screens import ChecklistScreen
 
 
@@ -67,8 +67,27 @@ class ProcedureTests(unittest.TestCase):
             for earlier, later in zip(buttons, buttons[1:])
         ), [(button.text(), button.y(), button.height()) for button in buttons])
 
-    def test_demonstrator_remains_normal_only(self):
+    def test_demonstrator_uses_electric_6s_procedures(self):
         screen = ChecklistScreen(AIRCRAFT["demonstrator"])
-        self.assertEqual(screen.section_order[0], "Before Start")
-        self.assertFalse(screen.emergency_data)
-        self.assertFalse(hasattr(screen, "mode_btn"))
+        self.assertEqual(screen.section_order[0], "Preflight / GCS")
+        self.assertTrue(hasattr(screen, "mode_btn"))
+        normal = [item.text for section in CHECKLISTS["demonstrator"].values() for item in section]
+        emergency = [item.text for section in DEMONSTRATOR_EMERGENCY_CHECKLISTS.values() for item in section]
+        combined = " ".join(normal + emergency).upper()
+        for forbidden in ("PARACHUTE", "FUEL", "CHT", "3S", "ENGINE", "BRAKE"):
+            self.assertNotIn(forbidden, combined)
+        self.assertIn("MOTOR", combined)
+        self.assertIn("6S", combined)
+        self.assertIn("6S BATTERY BELOW 22.0 V: PREPARE TO LAND", normal)
+        self.assertIn("AT 21.0 V: LOW VOLTAGE; END MISSION", emergency)
+        self.assertIn("AT 18.0 V: CRITICAL; LAND AT SAFE AREA", emergency)
+
+    def test_demonstrator_emergency_is_accessible_without_normal_completion(self):
+        screen = ChecklistScreen(AIRCRAFT["demonstrator"])
+        screen.rows[0].set_checked(True)
+        screen._toggle_mode()
+        self.assertTrue(screen._can_open_section("Motor Power Loss (Flight)"))
+        screen._load_section("Motor Power Loss (Flight)")
+        self.assertEqual(screen.current_section, "Motor Power Loss (Flight)")
+        screen._toggle_mode()
+        self.assertTrue(screen.rows[0].is_checked())
