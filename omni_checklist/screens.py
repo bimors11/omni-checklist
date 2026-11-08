@@ -2,7 +2,8 @@ from typing import Dict, List
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from omni_checklist.checklist_data import BETA_LOGO, AIRCRAFT, SECTION_ORDER, Aircraft, checklist_for
+from omni_checklist.checklist_data import BETA_LOGO, AIRCRAFT, Aircraft, checklist_for
+from omni_checklist.emergency_data import EMERGENCY_CHECKLISTS
 from omni_checklist.widgets import AircraftCard, ChecklistRow
 
 
@@ -85,7 +86,7 @@ class SelectScreen(QtWidgets.QWidget):
             cards.addWidget(card)
         layout.addLayout(cards, 1)
 
-        foot = QtWidgets.QLabel("OMNI-Trainer and OMNI-Demonstrator normal operations checklist.")
+        foot = QtWidgets.QLabel("OMNI-Trainer normal and emergency procedures; OMNI-Demonstrator normal checklist.")
         foot.setObjectName("hintText")
         foot.setWordWrap(True)
         layout.addWidget(foot)
@@ -105,15 +106,18 @@ class ChecklistScreen(QtWidgets.QWidget):
         super().__init__()
         self.aircraft = aircraft
         self.theme = theme
-        self.data = checklist_for(aircraft.key)
+        self.normal_data = checklist_for(aircraft.key)
+        self.emergency_data = EMERGENCY_CHECKLISTS if aircraft.key == "trainer" else {}
+        self.data = self.normal_data
+        self.mode = "normal"
+        self.section_order = list(self.data)
         self.rows: List[ChecklistRow] = []
         self.nav_buttons: Dict[str, QtWidgets.QPushButton] = {}
-        self.checked_state = {
-            section: [False] * len(items)
-            for section, items in self.data.items()
-        }
+        self.normal_checked_state = {section: [False] * len(items) for section, items in self.normal_data.items()}
+        self.emergency_checked_state = {section: [False] * len(items) for section, items in self.emergency_data.items()}
+        self.checked_state = self.normal_checked_state
         self.enforce_checklist = True
-        self.current_section = SECTION_ORDER[0]
+        self.current_section = self.section_order[0]
         self._build_ui()
         self._build_shortcuts()
         self._load_section(self.current_section)
@@ -166,11 +170,17 @@ class ChecklistScreen(QtWidgets.QWidget):
         title_box.setSpacing(0)
         title = QtWidgets.QLabel(self.aircraft.name)
         title.setObjectName("screenTitle")
-        subtitle = QtWidgets.QLabel(f"{self.aircraft.subtitle} | Normal operations")
-        subtitle.setObjectName("mutedText")
+        self.mode_subtitle = QtWidgets.QLabel(f"{self.aircraft.subtitle} | Normal operations")
+        self.mode_subtitle.setObjectName("mutedText")
         title_box.addWidget(title)
-        title_box.addWidget(subtitle)
+        title_box.addWidget(self.mode_subtitle)
         top_layout.addLayout(title_box, 1)
+
+        if self.emergency_data:
+            self.mode_btn = QtWidgets.QPushButton("Emergency Procedures")
+            self.mode_btn.setProperty("role", "danger")
+            self.mode_btn.clicked.connect(self._toggle_mode)
+            top_layout.addWidget(self.mode_btn)
 
         self.progress = QtWidgets.QProgressBar()
         self.progress.setFixedWidth(290)
@@ -213,13 +223,16 @@ class ChecklistScreen(QtWidgets.QWidget):
             aircraft_image.setPixmap(pix.scaled(280, 155, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
         left_layout.addWidget(aircraft_image)
 
-        for section in SECTION_ORDER:
-            button = QtWidgets.QPushButton(section)
-            button.setProperty("role", "nav")
-            button.setCheckable(True)
-            button.clicked.connect(lambda checked, name=section: self._load_section(name))
-            self.nav_buttons[section] = button
-            left_layout.addWidget(button)
+        self.nav_scroll = QtWidgets.QScrollArea()
+        self.nav_scroll.setWidgetResizable(True)
+        self.nav_scroll.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.nav_widget = QtWidgets.QWidget()
+        self.nav_layout = QtWidgets.QVBoxLayout(self.nav_widget)
+        self.nav_layout.setContentsMargins(0, 0, 0, 0)
+        self.nav_layout.setSpacing(5)
+        self.nav_scroll.setWidget(self.nav_widget)
+        left_layout.addWidget(self.nav_scroll, 1)
+        self._rebuild_navigation()
 
         left_layout.addSpacing(12)
         legend_panel = QtWidgets.QFrame()
@@ -256,12 +269,44 @@ class ChecklistScreen(QtWidgets.QWidget):
             legend_layout.addLayout(row)
         left_layout.addWidget(legend_panel)
 
-        left_layout.addStretch(1)
-        hint = QtWidgets.QLabel("Normal operations checklist.")
-        hint.setObjectName("hintText")
-        hint.setWordWrap(True)
-        left_layout.addWidget(hint)
+        self.mode_hint = QtWidgets.QLabel("Normal operations checklist.")
+        self.mode_hint.setObjectName("hintText")
+        self.mode_hint.setWordWrap(True)
+        left_layout.addWidget(self.mode_hint)
         return left
+
+    def _rebuild_navigation(self):
+        while self.nav_layout.count():
+            item = self.nav_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        self.nav_buttons = {}
+        for section in self.section_order:
+            button = QtWidgets.QPushButton(section)
+            button.setProperty("role", "nav")
+            button.setCheckable(True)
+            button.setMinimumHeight(42)
+            button.clicked.connect(lambda checked, name=section: self._load_section(name))
+            self.nav_buttons[section] = button
+            self.nav_layout.addWidget(button)
+        self.nav_layout.addStretch(1)
+        self.nav_widget.setMinimumHeight(len(self.section_order) * 48)
+
+    def _toggle_mode(self):
+        self._save_current_state()
+        self.rows = []
+        self.mode = "emergency" if self.mode == "normal" else "normal"
+        self.data = self.emergency_data if self.mode == "emergency" else self.normal_data
+        self.checked_state = self.emergency_checked_state if self.mode == "emergency" else self.normal_checked_state
+        self.section_order = list(self.data)
+        self.current_section = self.section_order[0]
+        self.mode_btn.setText("Normal Procedures" if self.mode == "emergency" else "Emergency Procedures")
+        self.mode_subtitle.setText(f"{self.aircraft.subtitle} | {self.mode.title()} procedures")
+        self.mode_hint.setText("Select the applicable emergency procedure." if self.mode == "emergency" else "Normal operations checklist.")
+        self.enforce_btn.setEnabled(self.mode == "normal")
+        self.complete_btn.setEnabled(self.mode == "normal")
+        self._rebuild_navigation()
+        self._load_section(self.current_section)
 
     def _build_checklist_panel(self) -> QtWidgets.QWidget:
         right = QtWidgets.QWidget()
@@ -325,6 +370,10 @@ class ChecklistScreen(QtWidgets.QWidget):
         return footer
 
     def _section_context(self, section: str) -> str:
+        if self.mode == "emergency":
+            return "AFM Chapter 3 quick reference. Select the applicable procedure immediately."
+        if section == "Preflight / GCS":
+            return "Airframe, crew, GCS, mission, and UAV power checks."
         if section == "Before Start":
             return "Aircraft, link, mission, and area checks before start."
         if section == "Start & Takeoff":
@@ -383,9 +432,9 @@ class ChecklistScreen(QtWidgets.QWidget):
         self._sync_prev_next()
 
     def _sync_prev_next(self):
-        idx = SECTION_ORDER.index(self.current_section)
+        idx = self.section_order.index(self.current_section)
         self.prev_btn.setEnabled(idx > 0)
-        self.next_btn.setEnabled(idx < len(SECTION_ORDER) - 1 and self._can_continue_from_current())
+        self.next_btn.setEnabled(idx < len(self.section_order) - 1 and self._can_continue_from_current())
         self._sync_nav_buttons()
         self._sync_enforce_button()
 
@@ -400,7 +449,7 @@ class ChecklistScreen(QtWidgets.QWidget):
         self.enforce_btn.setText("Enforce Checklist: ON" if self.enforce_checklist else "Enforce Checklist: OFF")
         if not hasattr(self, "enforce_hint"):
             return
-        if self.enforce_checklist and not self._section_complete(self.current_section):
+        if self.mode == "normal" and self.enforce_checklist and not self._section_complete(self.current_section):
             self.enforce_hint.setText("Complete this section to continue.")
         else:
             self.enforce_hint.setText("")
@@ -422,30 +471,34 @@ class ChecklistScreen(QtWidgets.QWidget):
         return bool(required) and all(required)
 
     def _first_incomplete_section(self) -> str:
-        for section in SECTION_ORDER:
+        for section in self.section_order:
             if not self._section_complete(section):
                 return section
-        return SECTION_ORDER[-1]
+        return self.section_order[-1]
 
     def _can_open_section(self, section: str) -> bool:
+        if self.mode == "emergency":
+            return True
         if not self.enforce_checklist:
             return True
-        return SECTION_ORDER.index(section) <= SECTION_ORDER.index(self._first_incomplete_section())
+        return self.section_order.index(section) <= self.section_order.index(self._first_incomplete_section())
 
     def _can_continue_from_current(self) -> bool:
-        return not self.enforce_checklist or self._section_complete(self.current_section)
+        return self.mode == "emergency" or not self.enforce_checklist or self._section_complete(self.current_section)
 
     def _previous_section(self):
-        idx = SECTION_ORDER.index(self.current_section)
+        idx = self.section_order.index(self.current_section)
         if idx > 0:
-            self._load_section(SECTION_ORDER[idx - 1])
+            self._load_section(self.section_order[idx - 1])
 
     def _next_section(self):
-        idx = SECTION_ORDER.index(self.current_section)
-        if idx < len(SECTION_ORDER) - 1 and self._can_continue_from_current():
-            self._load_section(SECTION_ORDER[idx + 1])
+        idx = self.section_order.index(self.current_section)
+        if idx < len(self.section_order) - 1 and self._can_continue_from_current():
+            self._load_section(self.section_order[idx + 1])
 
     def _complete_current_section(self):
+        if self.mode == "emergency":
+            return
         for row in self.rows:
             if not row.item.optional:
                 row.set_checked(True)

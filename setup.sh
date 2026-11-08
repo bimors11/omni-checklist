@@ -27,7 +27,6 @@ APT_PACKAGES=(
   libxcb-shape0
   libxcb-xinerama0
   libxcb-xfixes0
-  fuse
 )
 
 DNF_PACKAGES=(
@@ -92,7 +91,7 @@ install_system_packages() {
     done
     if ((${#missing[@]})); then
       run_sudo apt-get update
-      run_sudo apt-get install -y "${missing[@]}"
+      run_sudo apt-get install --no-remove -y "${missing[@]}"
     else
       echo "System packages already installed."
     fi
@@ -133,7 +132,7 @@ install_system_packages() {
     return
   fi
 
-  echo "No supported package manager found. Install Python 3, pip, venv, curl, patchelf, fuse, and Qt/XCB runtime libraries manually." >&2
+  echo "No supported package manager found. Install Python 3, pip, venv, curl, patchelf, and Qt/XCB runtime libraries manually." >&2
 }
 
 setup_python_env() {

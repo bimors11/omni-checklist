@@ -8,7 +8,7 @@ INSTRUCTION_KINDS = ("check", "test", "set", "action", "comm")
 
 def instruction_kind(item: ChecklistItem) -> str:
     text = item.text
-    if text.startswith("TOWER:") or "CALL 'CLEAR PROP'" in text:
+    if text.startswith(("TOWER:", "UAV ON:", "CREW BRIEF:", "EP: BRIEF")) or "CALL 'CLEAR PROP'" in text:
         return "comm"
     if text.startswith((
         "AHRS:",
@@ -22,6 +22,10 @@ def instruction_kind(item: ChecklistItem) -> str:
         "BRAKE 2 HOLD:",
         "RANGEFINDER:",
         "TAXI / STEERING:",
+        "GCS ATTITUDE:",
+        "BOTH GCS JOYSTICKS:",
+        "EP CONTROL:",
+        "FULL THROTTLE:",
     )):
         return "test"
     if text.startswith((
@@ -37,6 +41,12 @@ def instruction_kind(item: ChecklistItem) -> str:
         "MOTOR: IDLE / SHUT DOWN",
         "THROTTLE: IDLE",
         "THROTTLE: INCREASE",
+        "FLIGHT MODE / THROTTLE:",
+        "AIRCRAFT: ARM",
+        "ENGINE START:",
+        "OMNILINK START ALL:",
+        "PARACHUTE SAFETY PIN: REMOVED",
+        "PARACHUTE SAFETY PIN: INSERTED",
     )):
         return "set"
     if text.startswith((
@@ -47,6 +57,10 @@ def instruction_kind(item: ChecklistItem) -> str:
         "TAKEOFF:",
         "TELEMETRY: DISCONNECT",
         "WARM-UP:",
+        "OMNILINK: WAIT",
+        "START ATTEMPT:",
+        "MANUAL RESTART:",
+        "GO-AROUND WAYPOINT:",
     )):
         return "action"
     return "check"
